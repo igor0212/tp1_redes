@@ -119,7 +119,7 @@ char * listLocation()
     memset(response, 0, BUFSZ);
 
     if(countLocation() == 0){
-        sprintf(response,"Locations not found");
+        sprintf(response,"none");
         return response;
     } 
 
@@ -222,7 +222,7 @@ char * query()
     int index = -1;
     
     if(countLocation() == 0){
-        sprintf(response,"Minimum number of locations not found");
+        sprintf(response,"none");
         return response;
     }     
 

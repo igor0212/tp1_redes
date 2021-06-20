@@ -45,8 +45,7 @@ int main(int argc, char **argv) {
 	while(1) {
 		char buf[BUFSZ];
 		memset(buf, 0, BUFSZ);
-
-		//printf("mensagem> ");
+				
 		fgets(buf, BUFSZ-1, stdin);
 
 		//Removing \0
