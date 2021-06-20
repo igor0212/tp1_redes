@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
 	while(1) {
 		char buf[BUFSZ];
 		memset(buf, 0, BUFSZ);
-				
+
 		fgets(buf, BUFSZ-1, stdin);
 
 		//Removing \0
@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
 		}
 		
 		count = recv(s, buf, BUFSZ, 0);
-		if (count == 0) {			
+		if (count == 0 || count > 500) {			
 			break;
 		}
 

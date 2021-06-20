@@ -307,7 +307,7 @@ int main(int argc, char **argv) {
     setArrays();
 
     char addrstr[BUFSZ];
-    addrtostr(addr, addrstr, BUFSZ);
+    addrtostr(addr, addrstr, BUFSZ);    
 
     while (1) {
         struct sockaddr_storage cstorage;
@@ -326,8 +326,14 @@ int main(int argc, char **argv) {
         {
             char buf[BUFSZ];
             memset(buf, 0, BUFSZ);
-            size_t count = recv(csock, buf, BUFSZ - 1, 0);            
+            size_t count = recv(csock, buf, BUFSZ - 1, 0);                       
 
+            //Terminating program execution if bytes greater than 500
+            if ((int)count > 500) {                
+                close(csock);
+                break;
+            }
+          
             //Terminating program execution if client sends kill command 
             if (strcmp(buf, "kill") == 0) {                
                 close(csock);
