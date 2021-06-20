@@ -352,8 +352,6 @@ int main(int argc, char **argv) {
             
             sprintf(buf, "%s", response);
 
-            //printf("Enviado do servidor: %s\n", buf);
-
             count = send(csock, buf, strlen(buf) + 1, 0);
             if (count != strlen(buf) + 1) {
                 logexit("send");

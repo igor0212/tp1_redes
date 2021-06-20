@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
 
 	char addrstr[BUFSZ];
 	addrtostr(addr, addrstr, BUFSZ);
-	//printf("connected to %s\n", addrstr);
+	
 	
 	unsigned total = 0;
 	while(1) {
@@ -64,9 +64,7 @@ int main(int argc, char **argv) {
 
 		total += count;	
 		
-		puts(buf);
-		/*printf("Recebido do servidor: %s\n", buf);
-		printf("received %u bytes\n", total);*/
+		puts(buf);		
 	}
 	close(s);
 
