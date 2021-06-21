@@ -39,9 +39,7 @@ int main(int argc, char **argv) {
 
 	char addrstr[BUFSZ];
 	addrtostr(addr, addrstr, BUFSZ);
-	
-	
-	unsigned total = 0;
+		
 	while(1) {
 		char buf[BUFSZ];
 		memset(buf, 0, BUFSZ);
@@ -59,9 +57,7 @@ int main(int argc, char **argv) {
 		count = recv(s, buf, BUFSZ, 0);
 		if (count == 0 || count > 500) {			
 			break;
-		}
-
-		total += count;	
+		}		
 		
 		puts(buf);		
 	}
