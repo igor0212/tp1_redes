@@ -348,13 +348,10 @@ int main(int argc, char **argv) {
                 char *responseOption = option();
                 strcpy(response, responseOption);
                 free(responseOption);
-            } else if (responseMenu == -1){                
-                strcpy(response, "\nerror:\nusage <function> <x coordinate> <y coordinate>\nexample: add 111 222\n\n");
-            } else if (responseMenu == -2){
-                strcpy(response, "\nerror:\nminimum value of valid coordinate: 0\nmaximum value of valid coordinate: 9999\nexample: add 4444 6666\n\n");
-            } else {
-                logexit("menu");
-            }            
+            } else {                
+                close(csock);
+                break;
+            }
             
             sprintf(buf, "%s", response);
 
