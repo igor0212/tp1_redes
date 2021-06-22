@@ -1,12 +1,10 @@
 #include "common.h"
-
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
-
 #include <sys/socket.h>
 #include <sys/types.h>
 
@@ -40,7 +38,7 @@ void usage(int argc, char **argv) {
     exit(EXIT_FAILURE);
 }
 
-void set_arrays(){
+void set_arrays() {
     int i;    
     for(i = 0; i < MAX_LOCATION_QUANTITY; i++)
     {
@@ -50,10 +48,10 @@ void set_arrays(){
     }
 }
 
-int get_size_locations(){
+int get_size_locations() {
     int i;    
     int cont = 0;
-    for(i = 0; i < MAX_LOCATION_QUANTITY; i++){
+    for(i = 0; i < MAX_LOCATION_QUANTITY; i++) {
         if(locations[i].x != -1 && locations[i].y != -1){
             cont += 1;
         }
@@ -62,10 +60,9 @@ int get_size_locations(){
     return cont;
 }
 
-int get_index_to_add(){
+int get_index_to_add() {
     int i;    
-    for(i = 0; i < MAX_LOCATION_QUANTITY; i++)
-    {
+    for(i = 0; i < MAX_LOCATION_QUANTITY; i++) {
         if(locations[i].x == -1 && locations[i].y == -1){
             return i;
         }
@@ -74,10 +71,9 @@ int get_index_to_add(){
     return -1;
 }
 
-int get_index_by_location(){
+int get_index_by_location() {
     int i;    
-    for(i = 0; i < MAX_LOCATION_QUANTITY; i++)
-    {
+    for(i = 0; i < MAX_LOCATION_QUANTITY; i++) {
         if(locations[i].x == x && locations[i].y == y){
             return i;
         }
@@ -86,7 +82,7 @@ int get_index_by_location(){
     return -1;
 }
 
-void add_coordenate(){
+void add_coordenate() {
     int index = get_index_to_add();    
     if(index == -1){
         logexit("add_coordenate");
@@ -96,9 +92,9 @@ void add_coordenate(){
     locations[index].y = y;    
 }
 
-int remove_coordenate(){
+int remove_coordenate() {
     int index = get_index_by_location();
-    if(index == -1){
+    if(index == -1) {
         return -1;
     }
 
@@ -108,11 +104,11 @@ int remove_coordenate(){
     return 0;
 }
 
-int get_command(char *buf){
+int get_command(char *buf) {
     char * token = strtok(buf, " ");
     int cont = 0;    
 
-    while( token != NULL ) {
+    while(token != NULL) {
         if(cont == 0) {
             strcpy(function, token);
         } else if(cont == 1) {
@@ -137,44 +133,44 @@ int get_command(char *buf){
 
     int xValid = x >= MIN_VALUE_VALID_COORDINATE && x <= MAX_VALUE_VALID_COORDINATE;
     int yValid = y >= MIN_VALUE_VALID_COORDINATE && y <= MAX_VALUE_VALID_COORDINATE;
-    if(functionWithParameters && (!xValid || !yValid)){        
+    if(functionWithParameters && (!xValid || !yValid)) {        
         return -1;
     }    
 
     return 0;
 }
 
-void add_location(char *buf){   
+void add_location(char *buf) {   
     int index = get_index_by_location();
-    if(index != -1){
+    if(index != -1) {
         sprintf(buf,"%d %d already exists\n",x,y);
         return;
     } 
 
-    add_coordenate();    
-    
+    add_coordenate();
+
     sprintf(buf,"%d %d added\n",x,y);        
 }
 
-void remove_location(char *buf){
-    if(remove_coordenate() == 0){
+void remove_location(char *buf) {
+    if(remove_coordenate() == 0) {
         sprintf(buf,"%d %d removed\n",x,y);
     } else {
         sprintf(buf,"%d %d does not exist\n",x,y);        
     }
 }
 
-void list_locations(char *buf){
+void list_locations(char *buf) {
     memset(buf, 0, BUFSZ); //Reseting buf for don't sending list name too
 
-    if(get_size_locations() == 0){
+    if(get_size_locations() == 0) {
         sprintf(buf,"none\n");
         return;
     } 
 
     int i;    
     for(i = 0; i < MAX_LOCATION_QUANTITY; i++) {
-        if(locations[i].x != -1 && locations[i].y != -1){
+        if(locations[i].x != -1 && locations[i].y != -1) {
             char *location = malloc(BUFSZ);
             memset(location, 0, BUFSZ);            
 
@@ -186,18 +182,17 @@ void list_locations(char *buf){
     strcat(buf,"\n");  
 }
 
-void query(char *buf){     
+void query(char *buf) {
     int min_distance = 9999;
     int index = -1;
     
-    if(get_size_locations() == 0){
+    if(get_size_locations() == 0) {
         sprintf(buf,"none\n");        
     }     
 
     int i;        
-    for(i = 0; i < MAX_LOCATION_QUANTITY; i++)
-    {      
-        if(locations[i].x != x && locations[i].x != -1 && locations[i].y != y && locations[i].y != -1){
+    for(i = 0; i < MAX_LOCATION_QUANTITY; i++) {      
+        if(locations[i].x != x && locations[i].x != -1 && locations[i].y != y && locations[i].y != -1) {
             int distance = sqrt(((locations[i].x - x) ^ 2) + ((locations[i].y - y) ^ 2));            
             if(distance > 0){
                 euclidean_distances[i] = distance;
@@ -205,8 +200,8 @@ void query(char *buf){
         }
     }   
 
-    for(i = 0; i < MAX_LOCATION_QUANTITY; i++){
-        if(euclidean_distances[i] > 0){
+    for(i = 0; i < MAX_LOCATION_QUANTITY; i++) {
+        if(euclidean_distances[i] > 0) {
             if(euclidean_distances[i] < min_distance){
                 min_distance = euclidean_distances[i];
                 index = i;
@@ -214,14 +209,14 @@ void query(char *buf){
         }
     }
 
-    if(index == -1){
+    if(index == -1) {
         logexit("query");
     }
 
     sprintf(buf,"%d %d\n", locations[index].x, locations[index].y);       
 }
 
-void select_command(char *buf){
+void select_command(char *buf) {
     if(strcmp(function, OPTION_ADD) == 0) {
         add_location(buf);        
     } else if(strcmp(function, OPTION_REMOVE) == 0) {
@@ -235,10 +230,10 @@ void select_command(char *buf){
     }    
 }
 
-void print_messagem(char* message){
+void print_messagem(char* message) {
     int i=0;
     int tamMsg = strlen(message);    
-    while(i <= tamMsg){        
+    while(i <= tamMsg) {        
         char c = message[i];        
         printf("i: %d ---- %c = %d\n", i, c, c);
         i++;
@@ -295,7 +290,6 @@ int main(int argc, char **argv) {
         addrtostr(caddr, caddrstr, BUFSZ);        
          
         while(1) {
-
             char buf[BUFSZ];
             memset(buf, 0, BUFSZ);
             size_t count = recv(csock, buf, BUFSZ - 1, 0);   
