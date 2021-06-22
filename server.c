@@ -276,17 +276,15 @@ char * option()
     return ERROR_RETURN;
 }
 
-char * change(char* message){
+void print_messagem(char* message){
     int i=0;
     int tamMsg = strlen(message);    
-    char *messageFmt = malloc(tamMsg);
-    while(i <= tamMsg-1){
-        messageFmt[i] = message[i];
-        char c = messageFmt[i];
-        printf("%c = %d\n", c, c);
+    while(i <= tamMsg){        
+        char c = message[i];        
+        printf("i: %d ---- %c = %d\n", i, c, c);
         i++;
-    }   
-    return messageFmt;
+    }    
+    printf("\n")   ;
 }
 
 int main(int argc, char **argv) {
@@ -342,18 +340,16 @@ int main(int argc, char **argv) {
             char buf[BUFSZ];
             memset(buf, 0, BUFSZ);
             size_t count = recv(csock, buf, BUFSZ - 1, 0);   
-            printf("[msg] %s, %d bytes: %s\n", caddrstr, (int)count, buf);
+            printf("[msg] %s, %d bytes: %s\n", caddrstr, (int)count, buf);             
 
-            //Removing \0
-		    buf[strlen(buf)-1] = 0;            
-
-            strcpy(buf, change(buf));            
+            //print_messagem(buf);
 
             //Terminating program execution if bytes greater than 500
-            if ((int)count > MAX_BYTES) {                
+            if ((int)count > MAX_BYTES) { 
+                printf("Desconectado pois ultrapassou os bytes: %d\n", (int)count);
                 close(csock);
                 break;
-            }
+            }           
           
             //Terminating program execution if client sends kill command 
             if (strcmp(buf, "kill") == 0) {                
@@ -370,11 +366,13 @@ int main(int argc, char **argv) {
                 strcpy(response, responseOption);
                 free(responseOption);
             } else { //Terminating program execution if invalid request
+                printf("Desconectado pois mandou errado:\n");
+                print_messagem(buf);
                 close(csock);
                 break;
             }
             
-            sprintf(buf, "%s", response);
+            sprintf(buf, "%s\n", response);
 
             count = send(csock, buf, strlen(buf) + 1, 0);
             if (count != strlen(buf) + 1) {
