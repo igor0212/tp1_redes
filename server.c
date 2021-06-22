@@ -40,8 +40,7 @@ void usage(int argc, char **argv) {
     exit(EXIT_FAILURE);
 }
 
-void setArrays()
-{
+void setArrays(){
     int i;    
     for(i = 0; i < MAX_LOCATION_QUANTITY; i++)
     {
@@ -51,12 +50,10 @@ void setArrays()
     }
 }
 
-int countLocation()
-{
+int countLocation(){
     int i;    
     int cont = 0;
-    for(i = 0; i < MAX_LOCATION_QUANTITY; i++)
-    {
+    for(i = 0; i < MAX_LOCATION_QUANTITY; i++){
         if(locations[i].x != -1 && locations[i].y != -1){
             cont += 1;
         }
@@ -65,8 +62,7 @@ int countLocation()
     return cont;
 }
 
-int getIndexToAdd()
-{
+int getIndexToAdd(){
     int i;    
     for(i = 0; i < MAX_LOCATION_QUANTITY; i++)
     {
@@ -78,8 +74,7 @@ int getIndexToAdd()
     return -1;
 }
 
-int getIndexByLocation()
-{
+int getIndexByLocation(){
     int i;    
     for(i = 0; i < MAX_LOCATION_QUANTITY; i++)
     {
@@ -91,8 +86,7 @@ int getIndexByLocation()
     return -1;
 }
 
-void addLocation()
-{
+void addLocation(){
     int index = getIndexToAdd();    
     if(index == -1){
         logexit("addLocation");
@@ -102,49 +96,23 @@ void addLocation()
     locations[index].y = y;    
 }
 
-int removeLocation()
-{
+int removeLocation(){
     int index = getIndexByLocation();
     if(index == -1){
-        return 0;
+        return -1;
     }
 
     locations[index].x = -1;
     locations[index].y = -1;    
 
-    return 1;
+    return 0;
 }
 
-char * listLocation()
-{
-    char *response = malloc(BUFSZ);
-    memset(response, 0, BUFSZ);
-
-    if(countLocation() == 0){
-        sprintf(response,"none");
-        return response;
-    } 
-
-    int i;    
-    for(i = 0; i < MAX_LOCATION_QUANTITY; i++) {
-        if(locations[i].x != -1 && locations[i].y != -1){
-            char *locationStr = malloc(BUFSZ);
-            memset(locationStr, 0, BUFSZ);
-
-            sprintf(locationStr,"%d %d ",locations[i].x,locations[i].y);
-            strcat(response, locationStr);
-        }        
-    }
-
-    return response;
-}
-
-int menu(char *buf)
-{
+int menu(char *buf){
     char * token = strtok(buf, " ");
     int cont = 0;    
 
-    while( token != NULL ) {        
+    while( token != NULL ) {
         if(cont == 0) {
             strcpy(function, token);
         } else if(cont == 1) {
@@ -164,68 +132,68 @@ int menu(char *buf)
     int functionWithParameters = (optionAdd || optionRm || optionQuery) && cont == 3;
     int functionWithoutParameters = optionList && cont == 1;    
     if(!functionWithParameters && !functionWithoutParameters) {             
-        return -1;        
+        return -1;
     }
 
     int xValid = x >= MIN_VALUE_VALID_COORDINATE && x <= MAX_VALUE_VALID_COORDINATE;
     int yValid = y >= MIN_VALUE_VALID_COORDINATE && y <= MAX_VALUE_VALID_COORDINATE;
     if(functionWithParameters && (!xValid || !yValid)){        
-        return -2;
+        return -1;
     }    
 
-    return 1;
+    return 0;
 }
 
-char * add()
-{   
-    char *response = malloc(BUFSZ);
-    memset(response, 0, BUFSZ);
-
+void add(char *buf){   
     int index = getIndexByLocation();
     if(index != -1){
-        sprintf(response,"%d %d already exists",x,y);
-        return response;
+        sprintf(buf,"%d %d already exists\n",x,y);
+        return;
     } 
 
     addLocation();    
     
-    sprintf(response,"%d %d added",x,y);    
-    return response;
+    sprintf(buf,"%d %d added\n",x,y);        
 }
 
-char * removeCoordenate()
-{   
-    char *response = malloc(BUFSZ);
-    memset(response, 0, BUFSZ);
-
-    int removeLocationResponse = removeLocation();    
-    if(removeLocationResponse){
-        sprintf(response,"%d %d removed",x,y);
+void removeCoordenate(char *buf){   
+    int response = removeLocation();    
+    if(response == 0){
+        sprintf(buf,"%d %d removed\n",x,y);
     } else {
-        sprintf(response,"%d %d does not exist",x,y);        
+        sprintf(buf,"%d %d does not exist\n",x,y);        
     }
-    
-    return response;
 }
 
-char * list()
-{   
-    char *response = malloc(BUFSZ);
-    memset(response, 0, BUFSZ);    
-    sprintf(response, "%s", listLocation());       
-    return response;
+void list(char *buf){
+
+    memset(buf, 0, BUFSZ); //Reseting buf for don't sending list name too
+
+    if(countLocation() == 0){
+        sprintf(buf,"none\n");
+        return;
+    } 
+
+    int i;    
+    for(i = 0; i < MAX_LOCATION_QUANTITY; i++) {
+        if(locations[i].x != -1 && locations[i].y != -1){
+            char *location = malloc(BUFSZ);
+            memset(location, 0, BUFSZ);            
+
+            sprintf(location,"%d %d ",locations[i].x,locations[i].y);
+            strcat(buf, location);
+        }        
+    }  
+
+    strcat(buf,"\n");  
 }
 
-char * query()
-{ 
-    char *response = malloc(BUFSZ);
-    memset(response, 0, BUFSZ);
+void query(char *buf){     
     int min_distance = 9999;
     int index = -1;
     
     if(countLocation() == 0){
-        sprintf(response,"none");
-        return response;
+        sprintf(buf,"none\n");        
     }     
 
     int i;        
@@ -252,28 +220,21 @@ char * query()
         logexit("query");
     }
 
-    sprintf(response,"%d %d", locations[index].x, locations[index].y);   
-
-    return response;
+    sprintf(buf,"%d %d\n", locations[index].x, locations[index].y);       
 }
 
-char * option()
-{
-    int optionAdd = strcmp(function, OPTION_ADD) == 0;
-    int optionRm = strcmp(function, OPTION_REMOVE) == 0;
-    int optionQuery = strcmp(function, OPTION_QUERY) == 0;
-    int optionList = strcmp(function, OPTION_LIST) == 0;
-    if(optionAdd) {
-        return add();        
-    } else if(optionRm) {
-        return removeCoordenate();
-    } else if(optionQuery) {
-        return query();
-    } else if (optionList) {
-        return list();
-    }
-
-    return ERROR_RETURN;
+void option(char *buf){
+    if(strcmp(function, OPTION_ADD) == 0) {
+        add(buf);        
+    } else if(strcmp(function, OPTION_REMOVE) == 0) {
+        removeCoordenate(buf);
+    } else if(strcmp(function, OPTION_QUERY) == 0) {
+        query(buf);
+    } else if (strcmp(function, OPTION_LIST) == 0) {
+        list(buf);
+    } else {
+        logexit("option");
+    }    
 }
 
 void print_messagem(char* message){
@@ -284,7 +245,7 @@ void print_messagem(char* message){
         printf("i: %d ---- %c = %d\n", i, c, c);
         i++;
     }    
-    printf("\n")   ;
+    printf("\n");
 }
 
 int main(int argc, char **argv) {
@@ -335,44 +296,35 @@ int main(int argc, char **argv) {
         char caddrstr[BUFSZ];
         addrtostr(caddr, caddrstr, BUFSZ);        
          
-        while(1)
-        {
+        while(1) {
+
             char buf[BUFSZ];
             memset(buf, 0, BUFSZ);
             size_t count = recv(csock, buf, BUFSZ - 1, 0);   
             printf("[msg] %s, %d bytes: %s\n", caddrstr, (int)count, buf);             
 
-            //print_messagem(buf);
-
-            //Terminating program execution if bytes greater than 500
+            buf[strlen(buf)-1] = 0;
+            //print_messagem(buf);            
+            
             if ((int)count > MAX_BYTES) { 
                 printf("Desconectado pois ultrapassou os bytes: %d\n", (int)count);
-                close(csock);
+                close(csock); //Terminating program execution if bytes greater than 500
                 break;
-            }           
-          
-            //Terminating program execution if client sends kill command 
+            }                     
+            
             if (strcmp(buf, "kill") == 0) {                
-                close(csock);
+                close(csock); //Terminating program execution if client sends kill command 
                 break;
             }
 
-            char response[BUFSZ];
-            memset(response, 0, BUFSZ);
-
-            int responseMenu = menu(buf);                     
-            if (responseMenu == 1) {
-                char *responseOption = option();
-                strcpy(response, responseOption);
-                free(responseOption);
-            } else { //Terminating program execution if invalid request
+            if(menu(buf) != 0 ) {
                 printf("Desconectado pois mandou errado:\n");
                 print_messagem(buf);
-                close(csock);
+                close(csock); //Terminating program execution if invalid request
                 break;
             }
-            
-            sprintf(buf, "%s\n", response);
+
+            option(buf);            
 
             count = send(csock, buf, strlen(buf) + 1, 0);
             if (count != strlen(buf) + 1) {
