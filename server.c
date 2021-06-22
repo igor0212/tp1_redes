@@ -8,7 +8,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-#define BUFSZ 1024
+#define BUFSZ 500
 #define MIN_VALUE_VALID_COORDINATE 0
 #define MAX_VALUE_VALID_COORDINATE 9999
 #define MAX_LOCATION_QUANTITY 50
@@ -82,14 +82,16 @@ int get_index_by_location() {
     return -1;
 }
 
-void add_coordenate() {
+int add_coordenate() {
     int index = get_index_to_add();    
     if(index == -1){
-        logexit("add_coordenate");
+        return -1;
     }
 
     locations[index].x = x;
     locations[index].y = y;    
+
+    return 0;
 }
 
 int remove_coordenate() {
@@ -147,9 +149,11 @@ void add_location(char *buf) {
         return;
     } 
 
-    add_coordenate();
-
-    sprintf(buf,"%d %d added\n",x,y);        
+    if(add_coordenate() == 0) {
+        sprintf(buf,"%d %d added\n",x,y);
+    } else {
+        sprintf(buf,"limit exceeded\n");
+    }
 }
 
 void remove_location(char *buf) {
@@ -291,11 +295,11 @@ int main(int argc, char **argv) {
          
         while(1) {
             char buf[BUFSZ];
-            memset(buf, 0, BUFSZ);
+            memset(buf, 0, BUFSZ);            
             size_t count = recv(csock, buf, BUFSZ - 1, 0);   
-            printf("[msg] %s, %d bytes: %s\n", caddrstr, (int)count, buf);             
-
-            buf[strlen(buf)-1] = 0;
+            printf("[msg] %s, %d bytes: %s\n", caddrstr, (int)count, buf);
+            
+            //buf[strlen(buf)-1] = 0;
             //print_messagem(buf);            
             
             if ((int)count > MAX_BYTES) { 
@@ -318,8 +322,8 @@ int main(int argc, char **argv) {
 
             select_command(buf);            
 
-            count = send(csock, buf, strlen(buf) + 1, 0);
-            if (count != strlen(buf) + 1) {
+            count = send(csock, buf, strlen(buf), 0);
+            if (count != strlen(buf)) {
                 logexit("send");
             }
         }        
