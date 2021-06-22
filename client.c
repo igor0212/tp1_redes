@@ -44,10 +44,7 @@ int main(int argc, char **argv) {
 		char buf[BUFSZ];
 		memset(buf, 0, BUFSZ);
 
-		fgets(buf, BUFSZ-1, stdin);
-
-		//Removing \0
-		buf[strlen(buf)-1] = 0;
+		fgets(buf, BUFSZ-1, stdin);		
 
 		size_t count = send(s, buf, strlen(buf)+1, 0);			
 		if (count != strlen(buf)+1) {

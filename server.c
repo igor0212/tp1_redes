@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <time.h>
 
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -13,6 +14,7 @@
 #define MIN_VALUE_VALID_COORDINATE 0
 #define MAX_VALUE_VALID_COORDINATE 9999
 #define MAX_LOCATION_QUANTITY 50
+#define MAX_BYTES 500
 #define OPTION_ADD "add"
 #define OPTION_REMOVE "rm"
 #define OPTION_LIST "list"
@@ -274,6 +276,19 @@ char * option()
     return ERROR_RETURN;
 }
 
+char * change(char* message){
+    int i=0;
+    int tamMsg = strlen(message);    
+    char *messageFmt = malloc(tamMsg);
+    while(i <= tamMsg-1){
+        messageFmt[i] = message[i];
+        char c = messageFmt[i];
+        printf("%c = %d\n", c, c);
+        i++;
+    }   
+    return messageFmt;
+}
+
 int main(int argc, char **argv) {
     if (argc < 3) {
         usage(argc, argv);
@@ -326,10 +341,16 @@ int main(int argc, char **argv) {
         {
             char buf[BUFSZ];
             memset(buf, 0, BUFSZ);
-            size_t count = recv(csock, buf, BUFSZ - 1, 0);                       
+            size_t count = recv(csock, buf, BUFSZ - 1, 0);   
+            printf("[msg] %s, %d bytes: %s\n", caddrstr, (int)count, buf);
+
+            //Removing \0
+		    buf[strlen(buf)-1] = 0;            
+
+            strcpy(buf, change(buf));            
 
             //Terminating program execution if bytes greater than 500
-            if ((int)count > 500) {                
+            if ((int)count > MAX_BYTES) {                
                 close(csock);
                 break;
             }
@@ -348,7 +369,7 @@ int main(int argc, char **argv) {
                 char *responseOption = option();
                 strcpy(response, responseOption);
                 free(responseOption);
-            } else {                
+            } else { //Terminating program execution if invalid request
                 close(csock);
                 break;
             }
