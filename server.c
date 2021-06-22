@@ -32,7 +32,7 @@ struct location
 
 struct location locations[MAX_LOCATION_QUANTITY];
 
-int euclideanDistances[MAX_LOCATION_QUANTITY];
+int euclidean_distances[MAX_LOCATION_QUANTITY];
 
 void usage(int argc, char **argv) {
     printf("usage: %s <v4|v6> <server port>\n", argv[0]);
@@ -40,17 +40,17 @@ void usage(int argc, char **argv) {
     exit(EXIT_FAILURE);
 }
 
-void setArrays(){
+void set_arrays(){
     int i;    
     for(i = 0; i < MAX_LOCATION_QUANTITY; i++)
     {
         locations[i].x = -1;
         locations[i].y = -1;    
-        euclideanDistances[i] = 9999;        
+        euclidean_distances[i] = 9999;        
     }
 }
 
-int countLocation(){
+int get_size_locations(){
     int i;    
     int cont = 0;
     for(i = 0; i < MAX_LOCATION_QUANTITY; i++){
@@ -62,7 +62,7 @@ int countLocation(){
     return cont;
 }
 
-int getIndexToAdd(){
+int get_index_to_add(){
     int i;    
     for(i = 0; i < MAX_LOCATION_QUANTITY; i++)
     {
@@ -74,7 +74,7 @@ int getIndexToAdd(){
     return -1;
 }
 
-int getIndexByLocation(){
+int get_index_by_location(){
     int i;    
     for(i = 0; i < MAX_LOCATION_QUANTITY; i++)
     {
@@ -86,18 +86,18 @@ int getIndexByLocation(){
     return -1;
 }
 
-void addLocation(){
-    int index = getIndexToAdd();    
+void add_coordenate(){
+    int index = get_index_to_add();    
     if(index == -1){
-        logexit("addLocation");
+        logexit("add_coordenate");
     }
 
     locations[index].x = x;
     locations[index].y = y;    
 }
 
-int removeLocation(){
-    int index = getIndexByLocation();
+int remove_coordenate(){
+    int index = get_index_by_location();
     if(index == -1){
         return -1;
     }
@@ -108,7 +108,7 @@ int removeLocation(){
     return 0;
 }
 
-int menu(char *buf){
+int get_command(char *buf){
     char * token = strtok(buf, " ");
     int cont = 0;    
 
@@ -144,32 +144,30 @@ int menu(char *buf){
     return 0;
 }
 
-void add(char *buf){   
-    int index = getIndexByLocation();
+void add_location(char *buf){   
+    int index = get_index_by_location();
     if(index != -1){
         sprintf(buf,"%d %d already exists\n",x,y);
         return;
     } 
 
-    addLocation();    
+    add_coordenate();    
     
     sprintf(buf,"%d %d added\n",x,y);        
 }
 
-void removeCoordenate(char *buf){   
-    int response = removeLocation();    
-    if(response == 0){
+void remove_location(char *buf){
+    if(remove_coordenate() == 0){
         sprintf(buf,"%d %d removed\n",x,y);
     } else {
         sprintf(buf,"%d %d does not exist\n",x,y);        
     }
 }
 
-void list(char *buf){
-
+void list_locations(char *buf){
     memset(buf, 0, BUFSZ); //Reseting buf for don't sending list name too
 
-    if(countLocation() == 0){
+    if(get_size_locations() == 0){
         sprintf(buf,"none\n");
         return;
     } 
@@ -192,7 +190,7 @@ void query(char *buf){
     int min_distance = 9999;
     int index = -1;
     
-    if(countLocation() == 0){
+    if(get_size_locations() == 0){
         sprintf(buf,"none\n");        
     }     
 
@@ -202,15 +200,15 @@ void query(char *buf){
         if(locations[i].x != x && locations[i].x != -1 && locations[i].y != y && locations[i].y != -1){
             int distance = sqrt(((locations[i].x - x) ^ 2) + ((locations[i].y - y) ^ 2));            
             if(distance > 0){
-                euclideanDistances[i] = distance;
+                euclidean_distances[i] = distance;
             }            
         }
     }   
 
     for(i = 0; i < MAX_LOCATION_QUANTITY; i++){
-        if(euclideanDistances[i] > 0){
-            if(euclideanDistances[i] < min_distance){
-                min_distance = euclideanDistances[i];
+        if(euclidean_distances[i] > 0){
+            if(euclidean_distances[i] < min_distance){
+                min_distance = euclidean_distances[i];
                 index = i;
             }
         }
@@ -223,15 +221,15 @@ void query(char *buf){
     sprintf(buf,"%d %d\n", locations[index].x, locations[index].y);       
 }
 
-void option(char *buf){
+void select_command(char *buf){
     if(strcmp(function, OPTION_ADD) == 0) {
-        add(buf);        
+        add_location(buf);        
     } else if(strcmp(function, OPTION_REMOVE) == 0) {
-        removeCoordenate(buf);
+        remove_location(buf);
     } else if(strcmp(function, OPTION_QUERY) == 0) {
         query(buf);
     } else if (strcmp(function, OPTION_LIST) == 0) {
-        list(buf);
+        list_locations(buf);
     } else {
         logexit("option");
     }    
@@ -278,7 +276,7 @@ int main(int argc, char **argv) {
         logexit("listen");
     }
 
-    setArrays();
+    set_arrays();
 
     char addrstr[BUFSZ];
     addrtostr(addr, addrstr, BUFSZ);    
@@ -317,14 +315,14 @@ int main(int argc, char **argv) {
                 break;
             }
 
-            if(menu(buf) != 0 ) {
+            if(get_command(buf) != 0 ) {
                 printf("Desconectado pois mandou errado:\n");
                 print_messagem(buf);
                 close(csock); //Terminating program execution if invalid request
                 break;
             }
 
-            option(buf);            
+            select_command(buf);            
 
             count = send(csock, buf, strlen(buf) + 1, 0);
             if (count != strlen(buf) + 1) {
