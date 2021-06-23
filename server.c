@@ -173,6 +173,17 @@ void remove_location(char *buf) {
     }
 }
 
+void print_messagem(char* message) {
+    int i=0;
+    int tamMsg = strlen(message);    
+    while(i <= tamMsg) {        
+        char c = message[i];        
+        printf("i: %d ---- %c = %d\n", i, c, c);
+        i++;
+    }    
+    printf("\n");
+}
+
 void list_locations(char *buf) {
     memset(buf, 0, BUFSZ); //Reseting buf for don't sending list name too
 
@@ -184,15 +195,17 @@ void list_locations(char *buf) {
     int i;    
     for(i = 0; i < MAX_LOCATION_QUANTITY; i++) {
         if(locations[i].x != -1 && locations[i].y != -1) {
-            char *location = malloc(BUFSZ);
-            memset(location, 0, BUFSZ);            
+            char location[BUFSZ];
+            memset(location, 0, BUFSZ);
 
             sprintf(location,"%d %d ",locations[i].x,locations[i].y);
             strcat(buf, location);
         }        
-    }  
+    }
 
-    strcat(buf,"\n");  
+    buf[strlen(buf)-1] = 0;
+
+    strcat(buf,"\n");
 }
 
 void query(char *buf) {
@@ -245,17 +258,6 @@ void select_command(char *buf) {
     } else {
         logexit("option");
     }    
-}
-
-void print_messagem(char* message) {
-    int i=0;
-    int tamMsg = strlen(message);    
-    while(i <= tamMsg) {        
-        char c = message[i];        
-        printf("i: %d ---- %c = %d\n", i, c, c);
-        i++;
-    }    
-    printf("\n");
 }
 
 void format_message(char *buf){
