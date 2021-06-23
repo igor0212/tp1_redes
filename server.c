@@ -30,7 +30,7 @@ struct location
 
 struct location locations[MAX_LOCATION_QUANTITY];
 
-int euclidean_distances[MAX_LOCATION_QUANTITY];
+double euclidean_distances[MAX_LOCATION_QUANTITY];
 
 void usage(int argc, char **argv) {
     printf("usage: %s <v4|v6> <server port>\n", argv[0]);
@@ -196,7 +196,7 @@ void list_locations(char *buf) {
 }
 
 void query(char *buf) {
-    int min_distance = 9999;
+    double min_distance = 9999;
     int index = -1;
     
     if(get_size_locations() == 0) {
@@ -205,16 +205,20 @@ void query(char *buf) {
 
     int i;        
     for(i = 0; i < MAX_LOCATION_QUANTITY; i++) {      
-        if(locations[i].x != x && locations[i].x != -1 && locations[i].y != y && locations[i].y != -1) {
-            int distance = sqrt(((locations[i].x - x) ^ 2) + ((locations[i].y - y) ^ 2));            
-            if(distance > 0){
+        if(locations[i].x != -1 && locations[i].y != -1) {  
+
+            double x_value = (double)locations[i].x - x;       
+            double y_value = (double)locations[i].y - y;
+            
+            double distance = sqrt(pow(x_value, 2) + pow(y_value, 2));
+            if(distance >= 0){
                 euclidean_distances[i] = distance;
             }            
         }
-    }   
+    }
 
     for(i = 0; i < MAX_LOCATION_QUANTITY; i++) {
-        if(euclidean_distances[i] > 0) {
+        if(euclidean_distances[i] >= 0) {
             if(euclidean_distances[i] < min_distance){
                 min_distance = euclidean_distances[i];
                 index = i;
@@ -354,7 +358,7 @@ int main(int argc, char **argv) {
                 break;
             }
 
-            select_command(buf);            
+            select_command(buf);              
 
             count = send(csock, buf, strlen(buf), 0);
             if (count != strlen(buf)) {
