@@ -258,8 +258,19 @@ void print_messagem(char* message) {
     printf("\n");
 }
 
-int continue_command(char *buf, int count, int csock) {        
-    buf[strlen(buf)-1] = 0;                     
+void format_message(char *buf){
+    int i=0;    
+    while(i <= strlen(buf)) {        
+        if(buf[i] == '\n') {
+            buf[i] = 0;
+        }        
+        i++;
+    }    
+}
+
+int continue_command(char *buf, int count, int csock) {
+    
+    format_message(buf);
 
     printf("[msg recebida] %d bytes: %s\n", (int)count, buf);
     
@@ -279,7 +290,7 @@ int continue_command(char *buf, int count, int csock) {
     }
 
     if(valid_command(buf) != 0 ) {
-        printf("Desconectado pois mandou errado: %s\n", buf);
+        printf("Desconectado pois mandou errado: %s\n", buf);        
         printf("---------------------------------------------\n\n");                
         close(csock); //Terminating program execution if invalid request
         return -1;
@@ -311,7 +322,7 @@ void check_incomplete_message(char *buf, int count, int csock) {
         }  
 
         if(hasIncompleteMessage == 0) {
-            printf("[msg original] %d bytes: %s\n", (int)count, buf);
+            printf("[msg incompleta] %d bytes: %s\n", (int)count, buf);
             char buf2[BUFSZ];
             memset(buf2, 0, BUFSZ);
             count += recv(csock, buf2, BUFSZ, 0);
