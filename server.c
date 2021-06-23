@@ -101,12 +101,21 @@ int remove_coordenate() {
     }
 
     locations[index].x = -1;
-    locations[index].y = -1;    
+    locations[index].y = -1;
+
+    int i;
+    for(i = index + 1; i < MAX_LOCATION_QUANTITY; i++) {
+        locations[i-1].x = locations[i].x;
+        locations[i-1].y = locations[i].y;        
+    }
+
+    locations[MAX_LOCATION_QUANTITY - 1].x = -1;
+    locations[MAX_LOCATION_QUANTITY - 1].y = -1;
 
     return 0;
 }
 
-int get_command(char *buf) {
+int valid_command(char *buf) {
     char * token = strtok(buf, " ");
     int cont = 0;    
 
@@ -291,31 +300,56 @@ int main(int argc, char **argv) {
         }        
 
         char caddrstr[BUFSZ];
-        addrtostr(caddr, caddrstr, BUFSZ);        
+        addrtostr(caddr, caddrstr, BUFSZ);
          
         while(1) {
             char buf[BUFSZ];
             memset(buf, 0, BUFSZ);            
-            size_t count = recv(csock, buf, BUFSZ - 1, 0);   
-            printf("[msg] %s, %d bytes: %s\n", caddrstr, (int)count, buf);
-            
-            //buf[strlen(buf)-1] = 0;
-            //print_messagem(buf);            
+            size_t count = recv(csock, buf, BUFSZ, 0);
+            int hasEnter = 0;
+            while (hasEnter == 0) {
+                int i;
+                for(i = 0; i < strlen(buf); i++)
+                {                    
+                    if(buf[i] == '\n'){                        
+                        hasEnter = 1;
+                        break;
+                    }
+                }  
+
+                if(hasEnter == 0) {
+                    printf("[msg original] %d bytes: %s\n", (int)count, buf);
+                    char buf2[BUFSZ];
+                    memset(buf2, 0, BUFSZ);
+                    count += recv(csock, buf2, BUFSZ, 0);
+                    strcat(buf, buf2);
+                    strcat(buf,"\n");
+                    printf("[msg buscada novamente] %d bytes: %s\n", (int)count, buf2);                               
+                }
+            }            
+
+            buf[strlen(buf)-1] = 0;                     
+
+            printf("[msg recebida] %d bytes: %s\n", (int)count, buf);
             
             if ((int)count > MAX_BYTES) { 
                 printf("Desconectado pois ultrapassou os bytes: %d\n", (int)count);
+                printf("---------------------------------------------\n\n");
                 close(csock); //Terminating program execution if bytes greater than 500
                 break;
-            }                     
+            }            
             
             if (strcmp(buf, "kill") == 0) {                
+                printf("Desconectado pois mandou kill\n");
+                printf("---------------------------------------------\n\n");
+                set_arrays();
                 close(csock); //Terminating program execution if client sends kill command 
                 break;
             }
 
-            if(get_command(buf) != 0 ) {
-                printf("Desconectado pois mandou errado:\n");
-                print_messagem(buf);
+            if(valid_command(buf) != 0 ) {
+                printf("Desconectado pois mandou errado: %s\n", buf);
+                printf("---------------------------------------------\n\n");                
                 close(csock); //Terminating program execution if invalid request
                 break;
             }
@@ -326,6 +360,9 @@ int main(int argc, char **argv) {
             if (count != strlen(buf)) {
                 logexit("send");
             }
+
+            printf("[msg retornada] %d bytes: %s\n", (int)count, buf);
+            printf("---------------------------------------------\n\n");
         }        
     }
 
