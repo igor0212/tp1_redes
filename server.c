@@ -258,6 +258,46 @@ void print_messagem(char* message) {
     printf("\n");
 }
 
+int continue_command(char *buf, int count, int csock) {        
+    buf[strlen(buf)-1] = 0;                     
+
+    printf("[msg recebida] %d bytes: %s\n", (int)count, buf);
+    
+    if ((int)count > MAX_BYTES) { 
+        printf("Desconectado pois ultrapassou os bytes: %d\n", (int)count);
+        printf("---------------------------------------------\n\n");
+        close(csock); //Terminating program execution if bytes greater than 500
+        return -1;
+    }            
+    
+    if (strcmp(buf, "kill") == 0) {                
+        printf("Desconectado pois mandou kill\n");
+        printf("---------------------------------------------\n\n");
+        set_arrays();
+        close(csock); //Terminating program execution if client sends kill command 
+        return -1;
+    }
+
+    if(valid_command(buf) != 0 ) {
+        printf("Desconectado pois mandou errado: %s\n", buf);
+        printf("---------------------------------------------\n\n");                
+        close(csock); //Terminating program execution if invalid request
+        return -1;
+    }
+
+    select_command(buf);              
+
+    count = send(csock, buf, strlen(buf), 0);
+    if (count != strlen(buf)) {
+        logexit("send");
+    }
+
+    printf("[msg retornada] %d bytes: %s\n", (int)count, buf);
+    printf("---------------------------------------------\n\n");
+
+    return 0;
+}
+
 int main(int argc, char **argv) {
     if (argc < 3) {
         usage(argc, argv);
@@ -330,43 +370,11 @@ int main(int argc, char **argv) {
                     strcat(buf,"\n");
                     printf("[msg buscada novamente] %d bytes: %s\n", (int)count, buf2);                               
                 }
-            }            
+            } 
 
-            buf[strlen(buf)-1] = 0;                     
-
-            printf("[msg recebida] %d bytes: %s\n", (int)count, buf);
-            
-            if ((int)count > MAX_BYTES) { 
-                printf("Desconectado pois ultrapassou os bytes: %d\n", (int)count);
-                printf("---------------------------------------------\n\n");
-                close(csock); //Terminating program execution if bytes greater than 500
+            if(continue_command(buf, count, csock) != 0) {
                 break;
             }            
-            
-            if (strcmp(buf, "kill") == 0) {                
-                printf("Desconectado pois mandou kill\n");
-                printf("---------------------------------------------\n\n");
-                set_arrays();
-                close(csock); //Terminating program execution if client sends kill command 
-                break;
-            }
-
-            if(valid_command(buf) != 0 ) {
-                printf("Desconectado pois mandou errado: %s\n", buf);
-                printf("---------------------------------------------\n\n");                
-                close(csock); //Terminating program execution if invalid request
-                break;
-            }
-
-            select_command(buf);              
-
-            count = send(csock, buf, strlen(buf), 0);
-            if (count != strlen(buf)) {
-                logexit("send");
-            }
-
-            printf("[msg retornada] %d bytes: %s\n", (int)count, buf);
-            printf("---------------------------------------------\n\n");
         }        
     }
 
