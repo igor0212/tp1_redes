@@ -100,22 +100,25 @@ int remove_coordenate() {
         return -1;
     }
 
+    //Removing chosen index
     locations[index].x = -1;
     locations[index].y = -1;
 
-    int i;
+    //Regrouping list
+    int i;    
     for(i = index + 1; i < MAX_LOCATION_QUANTITY; i++) {
         locations[i-1].x = locations[i].x;
         locations[i-1].y = locations[i].y;        
     }
 
+    //Removing last position
     locations[MAX_LOCATION_QUANTITY - 1].x = -1;
     locations[MAX_LOCATION_QUANTITY - 1].y = -1;
 
     return 0;
 }
 
-int valid_command(char *buf) {
+int check_valid_command(char *buf) {
     char * token = strtok(buf, " ");
     int cont = 0;    
 
@@ -173,17 +176,6 @@ void remove_location(char *buf) {
     }
 }
 
-void print_messagem(char* message) {
-    int i=0;
-    int tamMsg = strlen(message);    
-    while(i <= tamMsg) {        
-        char c = message[i];        
-        printf("i: %d ---- %c = %d\n", i, c, c);
-        i++;
-    }    
-    printf("\n");
-}
-
 void list_locations(char *buf) {
     memset(buf, 0, BUFSZ); //Reseting buf for don't sending list name too
 
@@ -203,7 +195,7 @@ void list_locations(char *buf) {
         }        
     }
 
-    buf[strlen(buf)-1] = 0;
+    buf[strlen(buf)-1] = 0; //Removing last variable space
 
     strcat(buf,"\n");
 }
@@ -230,6 +222,7 @@ void query(char *buf) {
         }
     }
 
+    //Getting min value
     for(i = 0; i < MAX_LOCATION_QUANTITY; i++) {
         if(euclidean_distances[i] >= 0) {
             if(euclidean_distances[i] < min_distance){
@@ -270,30 +263,21 @@ void format_message(char *buf){
     }    
 }
 
-int continue_command(char *buf, int count, int csock) {
+int continue_command(char *buf, int count, int csock) {    
+    format_message(buf);    
     
-    format_message(buf);
-
-    printf("[msg recebida] %d bytes: %s\n", (int)count, buf);
-    
-    if ((int)count > MAX_BYTES) { 
-        printf("Desconectado pois ultrapassou os bytes: %d\n", (int)count);
-        printf("---------------------------------------------\n\n");
+    if ((int)count > MAX_BYTES) {         
         close(csock); //Terminating program execution if bytes greater than 500
         return -1;
     }            
     
-    if (strcmp(buf, "kill") == 0) {                
-        printf("Desconectado pois mandou kill\n");
-        printf("---------------------------------------------\n\n");
+    if (strcmp(buf, "kill") == 0) {
         set_arrays();
         close(csock); //Terminating program execution if client sends kill command 
         return -1;
     }
 
-    if(valid_command(buf) != 0 ) {
-        printf("Desconectado pois mandou errado: %s\n", buf);        
-        printf("---------------------------------------------\n\n");                
+    if(check_valid_command(buf) != 0 ) {        
         close(csock); //Terminating program execution if invalid request
         return -1;
     }
@@ -303,34 +287,29 @@ int continue_command(char *buf, int count, int csock) {
     count = send(csock, buf, strlen(buf), 0);
     if (count != strlen(buf)) {
         logexit("send");
-    }
-
-    printf("[msg retornada] %d bytes: %s\n", (int)count, buf);
-    printf("---------------------------------------------\n\n");
+    }    
 
     return 0;
 }
 
 void check_incomplete_message(char *buf, int count, int csock) {
-    int hasIncompleteMessage = 0;
-    while (hasIncompleteMessage == 0) {
+    int hasCompleteMessage = 0;
+    while (hasCompleteMessage == 0) {
         int i;
         for(i = 0; i < strlen(buf); i++)
         {                    
             if(buf[i] == '\n'){                        
-                hasIncompleteMessage = 1;
+                hasCompleteMessage = 1;
                 break;
             }
         }  
 
-        if(hasIncompleteMessage == 0) {
-            printf("[msg incompleta] %d bytes: %s\n", (int)count, buf);
-            char buf2[BUFSZ];
-            memset(buf2, 0, BUFSZ);
-            count += recv(csock, buf2, BUFSZ, 0);
-            strcat(buf, buf2);
-            strcat(buf,"\n");
-            printf("[msg buscada novamente] %d bytes: %s\n", (int)count, buf2);                               
+        if(hasCompleteMessage == 0) {            
+            char buf_aux[BUFSZ];
+            memset(buf_aux, 0, BUFSZ);
+            count += recv(csock, buf_aux, BUFSZ, 0);
+            strcat(buf, buf_aux);
+            strcat(buf,"\n");            
         }
     } 
 
@@ -386,14 +365,41 @@ int main(int argc, char **argv) {
          
         while(1) {
             char buf[BUFSZ];
-            memset(buf, 0, BUFSZ);            
+            memset(buf, 0, BUFSZ);
             size_t count = recv(csock, buf, BUFSZ, 0);
 
-            check_incomplete_message(buf, count, csock);
+            //Creating auxiliary variable to not manipulate in buffer
+            char buf_aux[BUFSZ]; 
+            memset(buf_aux, 0, BUFSZ);
+            strcpy(buf_aux, buf);
 
-            if(continue_command(buf, count, csock) != 0) {
-                break;
-            }            
+            //Calculating commands quantity
+            char *token = strtok(buf_aux,"\n");
+            int command_quantity = 0;                        
+            char commands[BUFSZ][BUFSZ];
+            memset(commands, 0, BUFSZ*BUFSZ);
+
+            //Getting commands quantity
+            while(token != NULL){
+                strcpy(commands[command_quantity], token);
+                command_quantity += 1;                
+                token = strtok(NULL, "\n");
+            }
+
+            if(command_quantity > 1) {
+                int i;
+                for (i = 0; i < command_quantity; i++) {                    
+                    if(continue_command(commands[i], count, csock) != 0) {
+                        break;
+                    }
+                }
+            } else {                
+
+                check_incomplete_message(buf, count, csock);
+                if(continue_command(buf, count, csock) != 0) {                    
+                    break;
+                }
+            }
         }        
     }
 
