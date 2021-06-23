@@ -298,6 +298,31 @@ int continue_command(char *buf, int count, int csock) {
     return 0;
 }
 
+void check_incomplete_message(char *buf, int count, int csock) {
+    int hasIncompleteMessage = 0;
+    while (hasIncompleteMessage == 0) {
+        int i;
+        for(i = 0; i < strlen(buf); i++)
+        {                    
+            if(buf[i] == '\n'){                        
+                hasIncompleteMessage = 1;
+                break;
+            }
+        }  
+
+        if(hasIncompleteMessage == 0) {
+            printf("[msg original] %d bytes: %s\n", (int)count, buf);
+            char buf2[BUFSZ];
+            memset(buf2, 0, BUFSZ);
+            count += recv(csock, buf2, BUFSZ, 0);
+            strcat(buf, buf2);
+            strcat(buf,"\n");
+            printf("[msg buscada novamente] %d bytes: %s\n", (int)count, buf2);                               
+        }
+    } 
+
+}
+
 int main(int argc, char **argv) {
     if (argc < 3) {
         usage(argc, argv);
@@ -350,27 +375,8 @@ int main(int argc, char **argv) {
             char buf[BUFSZ];
             memset(buf, 0, BUFSZ);            
             size_t count = recv(csock, buf, BUFSZ, 0);
-            int hasEnter = 0;
-            while (hasEnter == 0) {
-                int i;
-                for(i = 0; i < strlen(buf); i++)
-                {                    
-                    if(buf[i] == '\n'){                        
-                        hasEnter = 1;
-                        break;
-                    }
-                }  
 
-                if(hasEnter == 0) {
-                    printf("[msg original] %d bytes: %s\n", (int)count, buf);
-                    char buf2[BUFSZ];
-                    memset(buf2, 0, BUFSZ);
-                    count += recv(csock, buf2, BUFSZ, 0);
-                    strcat(buf, buf2);
-                    strcat(buf,"\n");
-                    printf("[msg buscada novamente] %d bytes: %s\n", (int)count, buf2);                               
-                }
-            } 
+            check_incomplete_message(buf, count, csock);
 
             if(continue_command(buf, count, csock) != 0) {
                 break;
